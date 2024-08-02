@@ -13,11 +13,10 @@ import axios from "axios";
 import { z } from "zod";
 
 const schemaFormularioProduto = z.object({
-  codigo: z.string().min(1, { message: "Campo vazio." }),
-  titulo: z.string().min(1, { message: "Campo vazio." }),
-  estoque: z.string().min(1, { message: "Campo vazio." }),
-  preco: z.string().min(1, { message: "Campo vazio." }),
-  ean: z.string().min(1, { message: "Campo vazio." }),
+  codigo: z.string().min(1, { message: "Campo vazio!" }),
+  titulo: z.string(),
+  estoque: z.string().min(1, { message: "Campo vazio!" }),
+  preco: z.string().min(1, { message: "Campo vazio!" }),
   imagens: z.any(),
 });
 
@@ -31,6 +30,9 @@ const precos = {
 };
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const codigoBling = searchParams?.get("code");
+
   const [files, setFiles] = useState<any[]>([]);
   const { acceptedFiles, getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -53,7 +55,32 @@ export default function Home() {
   const [tipoCadastro, setTipoCadastro] = useState("");
   const [carregando, setCarregando] = useState(false);
 
+  // Autenticação do Bling
+  const iniciarOAuth = () => {
+    const clientId = `${process.env.NEXT_PUBLIC_BLING_API_CLIENT_ID}`;
+    const authUrl = `https://www.bling.com.br/b/Api/v3/oauth/authorize?response_type=code&client_id=${clientId}&state=a223bb05e34e202f5cc198603b351957`;
+    window.location.href = authUrl;
+  };
+
+  function getToken() {
+    axios.get(`/api/bling-token?code=${codigoBling}`).then((res: any) => {
+      if (res.error === undefined) {
+        const token = res.data.access_token;
+        localStorage.setItem("tokenBling", token);
+      } else {
+        alert("Ops! Houve um problema na geração do Token ⛔");
+      }
+    });
+  }
+
   useEffect(() => {
+    console.log(localStorage.getItem("tokenBling"));
+
+    if (codigoBling === null) iniciarOAuth();
+    if (codigoBling !== "") {
+      if (localStorage.getItem("tokenBling") === "" || localStorage.getItem("tokenBling") === null) getToken();
+    }
+
     () => files.forEach((file) => URL.revokeObjectURL(file.preview));
   });
 
@@ -120,11 +147,58 @@ export default function Home() {
 
     var variacaoDeProduto: any = [...primeiraLinhaDaPlanilha];
 
+    const dadosBling = {
+      nome: data.titulo,
+      codigo: data.codigo.toLocaleUpperCase(),
+      preco: preco,
+      tipo: "P",
+      situacao: "A",
+      formato: "S",
+      descricaoCurta: "Descrição curta",
+      unidade: "UN",
+      pesoLiquido: 0.25,
+      pesoBruto: 0.25,
+      volumes: 1,
+      itensPorCaixa: 1,
+      gtin: "7794051852802",
+      gtinEmbalagem: "7794051852802",
+      tipoProducao: "P",
+      condicao: 0,
+      freteGratis: false,
+      marca: "",
+      descricaoComplementar: "",
+      dimensoes: {
+        largura: 10,
+        altura: 11,
+        profundidade: 16,
+        unidadeMedida: 1,
+      },
+      actionEstoque: "T",
+      tributacao: {
+        origem: 0,
+        ncm: "6101.30.00",
+        cest: "28.038.00",
+        codigoListaServicos: "",
+        spedTipoItem: "",
+        codigoItem: "",
+        valorBaseStRetencao: 0,
+        valorStRetencao: 0,
+        valorICMSSubstituto: 0,
+      },
+      midia: {
+        imagens: {
+          externas: todasAsImagensBling,
+        },
+      },
+    };
+
     try {
       if (tipoCadastro === "planilha") {
         if (qtdFiles === 0) return alert("Não se esqueça das Imagens! 🖼️");
         console.log(pegaDetalhesProduto(idProduto));
         geraPlanilha(variacaoDeProduto, data.codigo.toUpperCase());
+      } else if (tipoCadastro === "bling") {
+        //saveProdutos(dadosBling);
       }
     } catch (error) {
       alert(`Opa, tem algum problema rolando... Chama o dev 😒: ${error}`);
@@ -139,7 +213,7 @@ export default function Home() {
     // Planilha do Bling 3
     const rows = Array.from(dadosDaPlanilha).map((row: any) => ({
       ID: "",
-      Código: row.codigo, // Dinâmico
+      Código: `${row.codigo}_BLACK`, // Dinâmico
       Descrição: row.descricao, // Dinâmico
       Unidade: "UN",
       NCM: "6101.30.00",
@@ -404,12 +478,12 @@ export default function Home() {
         </div>
 
         {/* Formulários */}
-        <div className="flex z-9 min-w-full justify-center">
-          <form className="flex flex-col justify-start items-start gap-10" onSubmit={handleSubmit(onSubmit)}>
+        <div className="flex z-10">
+          <form className="flex flex-col justify-center items-center gap-10" onSubmit={handleSubmit(onSubmit)}>
             {/* Seção de Camisa */}
             {tipoDeProduto === "camisa" && (
               <>
-                <section className="min-w-[850px] container">
+                <section className="container">
                   <label
                     htmlFor="imagens"
                     {...getRootProps({
@@ -434,7 +508,7 @@ export default function Home() {
                   </label>
                 </section>
 
-                <div className="flex min-w-[850px] gap-6">
+                <div className="flex gap-10 mb-4 w-full">
                   <label className="flex flex-col gap-2 text-zinc-200" htmlFor="codigo">
                     Código
                     <input
@@ -447,10 +521,10 @@ export default function Home() {
                     />
                     {errors.codigo?.message ? <span className="text-red-300">{errors.codigo?.message}</span> : null}
                   </label>
-                  <label className="flex flex-col w-full gap-2 text-zinc-200" htmlFor="titulo">
+                  <label className="flex flex-col gap-2 text-zinc-200 w-full" htmlFor="titulo">
                     Titulo
                     <input
-                      className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      className="w-full bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
                       id="titulo"
                       type="text"
                       placeholder="Camisa Brk Agro Produtor de Café com Prot..."
@@ -461,22 +535,11 @@ export default function Home() {
                   </label>
                 </div>
 
-                <div className="flex gap-6">
-                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="ean">
-                    GTIN / EAN
-                    <input
-                      className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
-                      id="ean"
-                      type="text"
-                      {...register("ean")}
-                      placeholder="000000000000"
-                    />
-                    {errors.estoque?.message ? <span className="text-red-300">{errors.estoque?.message}</span> : null}
-                  </label>
+                <div className="flex mb-16 gap-10">
                   <label className="flex flex-col gap-2 text-zinc-200" htmlFor="estoque">
                     Estoque
                     <input
-                      className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      className="max-w-32 bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
                       id="estoque"
                       type="text"
                       {...register("estoque")}
@@ -487,13 +550,25 @@ export default function Home() {
                   <label className="flex flex-col gap-2 text-zinc-200" htmlFor="preco">
                     Preço
                     <CurrencyInput
-                      className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      className="max-w-32 bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
                       id="preco"
                       placeholder="R$154,90"
                       intlConfig={{ locale: "pt-BR", currency: "BRL" }}
                       {...register("preco")}
                     />
                     {errors.preco?.message ? <span className="text-red-300">{errors.preco?.message}</span> : null}
+                  </label>
+                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="titulo">
+                    GTIN / EAN
+                    <input
+                      className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      id="titulo"
+                      type="text"
+                      placeholder="Nº do EAN ou GTIN"
+                      {...register("titulo")}
+                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                    />
+                    {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
                 </div>
               </>
@@ -526,7 +601,7 @@ export default function Home() {
                   </label>
                 </section>
 
-                <div className="flex gap-10 mb-16">
+                <div className="flex gap-10 mb-4 w-full">
                   <label className="flex flex-col gap-2 text-zinc-200" htmlFor="codigo">
                     Código
                     <input
@@ -535,38 +610,58 @@ export default function Home() {
                       type="text"
                       placeholder="Ex: CASUAL / APC0..."
                       {...register("codigo")}
+                      onKeyUp={(e: any) => pegaProdutoPorCodigo(e.target.value)}
                     />
+                    {errors.codigo?.message ? <span className="text-red-300">{errors.codigo?.message}</span> : null}
                   </label>
-
-                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="titulo">
+                  <label className="flex flex-col gap-2 text-zinc-200 w-full" htmlFor="titulo">
                     Titulo
                     <input
-                      className="min-w-96 bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      className="w-full bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
                       id="titulo"
                       type="text"
-                      placeholder="Ex: Camiseta Agro Brk..."
+                      placeholder="Camiseta Brk Agro Agronomia com Algodão Egíp..."
                       {...register("titulo")}
+                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
                     />
+                    {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
+                </div>
+
+                <div className="flex mb-16 gap-10">
                   <label className="flex flex-col gap-2 text-zinc-200" htmlFor="estoque">
                     Estoque
                     <input
                       className="max-w-32 bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
-                      itemID="estoque"
+                      id="estoque"
                       type="text"
-                      placeholder="1000"
                       {...register("estoque")}
+                      placeholder="1000"
                     />
+                    {errors.estoque?.message ? <span className="text-red-300">{errors.estoque?.message}</span> : null}
                   </label>
                   <label className="flex flex-col gap-2 text-zinc-200" htmlFor="preco">
                     Preço
                     <CurrencyInput
                       className="max-w-32 bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
                       id="preco"
+                      placeholder="Cas. R$94,90 / APC0 R$129,90"
                       intlConfig={{ locale: "pt-BR", currency: "BRL" }}
-                      placeholder="Ex: Casual R$94,90 | APC: R$129,90"
                       {...register("preco")}
                     />
+                    {errors.preco?.message ? <span className="text-red-300">{errors.preco?.message}</span> : null}
+                  </label>
+                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="titulo">
+                    GTIN / EAN
+                    <input
+                      className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      id="titulo"
+                      type="text"
+                      placeholder="Nº do EAN ou GTIN"
+                      {...register("titulo")}
+                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                    />
+                    {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
                 </div>
               </>
@@ -599,36 +694,44 @@ export default function Home() {
                   </label>
                 </section>
 
-                <div className="flex gap-4">
+                <div className="flex gap-10 mb-4 w-full">
                   <label className="flex flex-col gap-2 text-zinc-200" htmlFor="codigo">
                     Código
                     <input
-                      className="max-w-32 bg-transparent text-zinc-200 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      className="max-w-32 bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5 uppercase"
                       id="codigo"
                       type="text"
-                      placeholder="Ex: BA0..."
+                      placeholder="Ex: B0 / BA0..."
                       {...register("codigo")}
+                      onKeyUp={(e: any) => pegaProdutoPorCodigo(e.target.value)}
                     />
+                    {errors.codigo?.message ? <span className="text-red-300">{errors.codigo?.message}</span> : null}
                   </label>
-                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="titulo">
+                  <label className="flex flex-col gap-2 text-zinc-200 w-full" htmlFor="titulo">
                     Titulo
                     <input
-                      className="min-w-96 bg-transparent text-zinc-200 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      className="w-full bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
                       id="titulo"
                       type="text"
-                      placeholder="Ex: Boné Agro Brk..."
+                      placeholder="Boné Trucker Brk Agro Camo..."
                       {...register("titulo")}
+                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
                     />
+                    {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
+                </div>
+
+                <div className="flex mb-16 gap-10">
                   <label className="flex flex-col gap-2 text-zinc-200" htmlFor="estoque">
                     Estoque
                     <input
-                      className="max-w-32 bg-transparent text-zinc-200 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      className="max-w-32 bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
                       id="estoque"
                       type="text"
-                      placeholder="1000"
                       {...register("estoque")}
+                      placeholder="1000"
                     />
+                    {errors.estoque?.message ? <span className="text-red-300">{errors.estoque?.message}</span> : null}
                   </label>
                   <label className="flex flex-col gap-2 text-zinc-200" htmlFor="preco">
                     Preço
@@ -639,6 +742,19 @@ export default function Home() {
                       intlConfig={{ locale: "pt-BR", currency: "BRL" }}
                       {...register("preco")}
                     />
+                    {errors.preco?.message ? <span className="text-red-300">{errors.preco?.message}</span> : null}
+                  </label>
+                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="titulo">
+                    GTIN / EAN
+                    <input
+                      className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      id="titulo"
+                      type="text"
+                      placeholder="Nº do EAN ou GTIN"
+                      {...register("titulo")}
+                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                    />
+                    {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
                 </div>
               </>
