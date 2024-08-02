@@ -404,7 +404,7 @@ export default function Home() {
         </div>
 
         {/* Formulários */}
-        <div className="flex z-10 min-w-full justify-center">
+        <div className="flex z-9 min-w-full justify-center">
           <form className="flex flex-col justify-start items-start gap-10" onSubmit={handleSubmit(onSubmit)}>
             {/* Seção de Camisa */}
             {tipoDeProduto === "camisa" && (
