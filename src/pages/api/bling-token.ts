@@ -3,8 +3,8 @@ import axios from 'axios';
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const { code } = req.query;
-  const clientId = '71a6e58ecb01390816d67f708d256e487cf1fe9f';
-  const clientSecret = '724e1d865cecdaa5e596bc3254645f7d9329476d88984acf737b1b9149d1'; 
+  const clientId = `${process.env.NEXT_PUBLIC_BLING_API_CLIENT_ID}`;
+  const clientSecret = `${process.env.NEXT_PUBLIC_BLING_API_CLIENT_SECRET}`; 
 
   try {
     const response = await axios({
