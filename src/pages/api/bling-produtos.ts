@@ -21,7 +21,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       axios
         .request(options)
         .then(function (response) {
-          console.log(response.data);
           res.status(200).json(response.data)
         })
         .catch(function (error) {
