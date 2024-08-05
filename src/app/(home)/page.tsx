@@ -531,7 +531,7 @@ export default function Home() {
                       type="text"
                       placeholder="Camisa Brk Agro Produtor de Café com Prot..."
                       {...register("titulo")}
-                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                      defaultValue={`${tituloProduto ?? ""}`}
                     />
                     {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
@@ -624,7 +624,7 @@ export default function Home() {
                       type="text"
                       placeholder="Camiseta Brk Agro Agronomia com Algodão Egíp..."
                       {...register("titulo")}
-                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                      defaultValue={`${tituloProduto ?? ""}`}
                     />
                     {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
@@ -717,7 +717,7 @@ export default function Home() {
                       type="text"
                       placeholder="Boné Trucker Brk Agro Camo..."
                       {...register("titulo")}
-                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                      defaultValue={`${tituloProduto ?? ""}`}
                     />
                     {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
@@ -783,6 +783,7 @@ export default function Home() {
                       id="titulo"
                       type="text"
                       placeholder="Ex: Jaqueta Corta Vento Brk..."
+                      defaultValue={`${tituloProduto ?? ""}`}
                     />
                   </label>
                   <label className="flex flex-col gap-2" htmlFor="estoque">
