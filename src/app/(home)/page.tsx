@@ -17,6 +17,7 @@ const schemaFormularioProduto = z.object({
   titulo: z.string(),
   estoque: z.string().min(1, { message: "Campo vazio!" }),
   preco: z.string().min(1, { message: "Campo vazio!" }),
+  ean: z.string().min(1, { message: "Campo vazio!" }),
   imagens: z.any(),
 });
 
@@ -118,7 +119,6 @@ export default function Home() {
         const response = await axios.post("https://api.cloudinary.com/v1_1/daruxsllg/image/upload", formData);
 
         todasAsImagens.push(response.data.secure_url); //Imagens para Planilha
-
         todasAsImagensBling.push({ link: response.data.secure_url }); //Imagens para o Bling
       } catch (error) {
         console.error("Erro no Upload da Imagem: ", error);
@@ -142,6 +142,7 @@ export default function Home() {
         marca: "",
         url_imagens_externas: todasAsImagens.join("|"), //backlog clodinary
         grupo_de_produtos: (tipoDeProduto === "camisa" && "Camisa Master") || (tipoDeProduto === "camiseta" && "Camiseta Casual"),
+        ean: data.ean,
       },
     ];
 
@@ -195,7 +196,6 @@ export default function Home() {
     try {
       if (tipoCadastro === "planilha") {
         if (qtdFiles === 0) return alert("Não se esqueça das Imagens! 🖼️");
-        console.log(pegaDetalhesProduto(idProduto));
         geraPlanilha(variacaoDeProduto, data.codigo.toUpperCase());
       } else if (tipoCadastro === "bling") {
         //saveProdutos(dadosBling);
@@ -231,8 +231,8 @@ export default function Home() {
       "Estoque mínimo": parseFloat("0"),
       "Peso líquido (Kg)": parseFloat("0,250"),
       "Peso bruto (Kg)": parseFloat("0,250"),
-      "GTIN/EAN": "", // Dinâmico
-      "GTIN/EAN da Embalagem": "", // Dinâmico
+      "GTIN/EAN": row.ean, // Dinâmico
+      "GTIN/EAN da Embalagem": row.ean, // Dinâmico
       "Largura do produto": parseFloat("10"),
       "Altura do Produto": parseFloat("11"),
       "Profundidade do produto": parseFloat("16"),
@@ -280,73 +280,6 @@ export default function Home() {
       compression: true,
     });
 
-    // Planilha do Bling 1
-    const rowsBling1 = Array.from(dadosDaPlanilha).map((row: any) => ({
-      ID: "",
-      Código: row.codigo, // Dinâmico
-      Descrição: row.descricao, // Dinâmico
-      Unidade: "UN",
-      NCM: "6101.30.00",
-      Origem: parseFloat("0"),
-      Preço: row.preco, // Dinâmico
-      "Valor IPI fixo": parseFloat("0"),
-      Observações: "",
-      Situação: "Ativo",
-      Estoque: parseFloat("0"), // Dinâmico
-      "Preço de custo": parseFloat("0"),
-      "Cód. no fornecedor": "",
-      Fornecedor: "",
-      Localização: "",
-      "Estoque máximo": parseFloat("0"),
-      "Estoque mínimo": parseFloat("0"),
-      "Peso líquido (Kg)": parseFloat("0,250"),
-      "Peso bruto (Kg)": parseFloat("0,250"),
-      "GTIN/EAN": "", // Dinâmico
-      "GTIN/EAN da Embalagem": "", // Dinâmico
-      "Largura do produto": parseFloat("10"),
-      "Altura do Produto": parseFloat("11"),
-      "Profundidade do produto": parseFloat("16"),
-      "Data Validade": "",
-      "Descrição do Produto no Fornecedor": "",
-      "Descrição Complementar": "",
-      "Itens p/ caixa": parseFloat("1"),
-      "Produto Variação": row.produto_variacao, // Dinâmico
-      "Tipo Produção": "Própria", // Dinâmico
-      "Classe de enquadramento do IPI": "",
-      "Código na Lista de Serviços": "",
-      "Tipo do item": "Produto Acabado", // Dinâmico
-      "Grupo de Tags/Tags": "",
-      Tributos: parseFloat("0"),
-      "Código Pai": row.codigo_pai, // Dinâmico
-      "Código Integração": parseFloat("0"),
-      "Grupo de produtos": row.grupo_de_produtos, // Dinâmico
-      Marca: "",
-      CEST: "28.038.00",
-      Volumes: parseFloat("1"),
-      "Descrição Curta": "",
-      "Cross-Docking": "",
-      "URL Imagens Externas": row.url_imagens_externas, // Dinâmico
-      "Link Externo": "",
-      "Meses Garantia no Fornecedor": parseFloat("0"),
-      "Clonar dados do pai": "NÂO",
-      "Condição do Produto": "NOVO",
-      "Frete Grátis": "NÂO",
-      "Número FCI": "",
-      Vídeo: "",
-      Departamento: "",
-      "Unidade de Medida": "Centímetro",
-      "Preço de Compra": parseFloat("0"),
-      "Valor base ICMS ST para retenção": parseFloat("0"),
-      "Valor ICMS ST para retenção": parseFloat("0"),
-      "Valor ICMS próprio do substituto": parseFloat("0"),
-      "Categoria do produto": "",
-      "Informações Adicionais": "",
-    }));
-
-    const worksheetBling1 = utils.json_to_sheet(rowsBling1);
-    const workbookBling1 = utils.book_new();
-    utils.book_append_sheet(workbookBling1, worksheetBling1);
-    writeFileXLSX(workbookBling1, `${codigoProduto}-bling-1.xlsx`);
     setCarregando(false);
   }
 
@@ -377,9 +310,8 @@ export default function Home() {
       axios
         .request(options)
         .then(function (response) {
-          setTituloProduto(response.data[0].nome);
-          setIdProduto(response.data[0].id);
-          console.log(response.data[0]);
+          setTituloProduto(response.data.data[0].nome);
+          setIdProduto(response.data.data[0].id);
         })
         .catch(function (error) {
           console.error(error);
@@ -529,7 +461,7 @@ export default function Home() {
                       type="text"
                       placeholder="Camisa Brk Agro Produtor de Café com Prot..."
                       {...register("titulo")}
-                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                      defaultValue={tituloProduto}
                     />
                     {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
@@ -558,17 +490,16 @@ export default function Home() {
                     />
                     {errors.preco?.message ? <span className="text-red-300">{errors.preco?.message}</span> : null}
                   </label>
-                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="titulo">
+                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="ean">
                     GTIN / EAN
                     <input
                       className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
-                      id="titulo"
+                      id="ean"
                       type="text"
                       placeholder="Nº do EAN ou GTIN"
-                      {...register("titulo")}
-                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                      {...register("ean")}
                     />
-                    {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
+                    {errors.ean?.message ? <span className="text-red-300">{errors.ean?.message}</span> : null}
                   </label>
                 </div>
               </>
@@ -622,7 +553,7 @@ export default function Home() {
                       type="text"
                       placeholder="Camiseta Brk Agro Agronomia com Algodão Egíp..."
                       {...register("titulo")}
-                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                      defaultValue={`${tituloProduto ?? ""}`}
                     />
                     {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
@@ -651,17 +582,16 @@ export default function Home() {
                     />
                     {errors.preco?.message ? <span className="text-red-300">{errors.preco?.message}</span> : null}
                   </label>
-                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="titulo">
+                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="ean">
                     GTIN / EAN
                     <input
                       className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
-                      id="titulo"
+                      id="ean"
                       type="text"
                       placeholder="Nº do EAN ou GTIN"
-                      {...register("titulo")}
-                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                      {...register("ean")}
                     />
-                    {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
+                    {errors.ean?.message ? <span className="text-red-300">{errors.ean?.message}</span> : null}
                   </label>
                 </div>
               </>
@@ -715,7 +645,7 @@ export default function Home() {
                       type="text"
                       placeholder="Boné Trucker Brk Agro Camo..."
                       {...register("titulo")}
-                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                      defaultValue={`${tituloProduto ?? ""}`}
                     />
                     {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
                   </label>
@@ -744,17 +674,16 @@ export default function Home() {
                     />
                     {errors.preco?.message ? <span className="text-red-300">{errors.preco?.message}</span> : null}
                   </label>
-                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="titulo">
+                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="ean">
                     GTIN / EAN
                     <input
                       className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
-                      id="titulo"
+                      id="ean"
                       type="text"
                       placeholder="Nº do EAN ou GTIN"
-                      {...register("titulo")}
-                      defaultValue={`${tituloProduto ? tituloProduto : ""}`}
+                      {...register("ean")}
                     />
-                    {errors.titulo?.message ? <span className="text-red-300">{errors.titulo?.message}</span> : null}
+                    {errors.ean?.message ? <span className="text-red-300">{errors.ean?.message}</span> : null}
                   </label>
                 </div>
               </>
@@ -781,6 +710,7 @@ export default function Home() {
                       id="titulo"
                       type="text"
                       placeholder="Ex: Jaqueta Corta Vento Brk..."
+                      defaultValue={`${tituloProduto ?? ""}`}
                     />
                   </label>
                   <label className="flex flex-col gap-2" htmlFor="estoque">
@@ -801,6 +731,17 @@ export default function Home() {
                       type="text"
                       defaultValue={precos.cortaVento}
                     />
+                  </label>
+                  <label className="flex flex-col gap-2 text-zinc-200" htmlFor="ean">
+                    GTIN / EAN
+                    <input
+                      className="bg-transparent text-zinc-400 placeholder:text-zinc-400/25 placeholder:text-sm border-b border-b-zinc-700 py-1.5"
+                      id="ean"
+                      type="text"
+                      placeholder="Nº do EAN ou GTIN"
+                      {...register("ean")}
+                    />
+                    {errors.ean?.message ? <span className="text-red-300">{errors.ean?.message}</span> : null}
                   </label>
                 </div>
               </>
