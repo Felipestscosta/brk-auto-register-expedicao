@@ -377,9 +377,9 @@ export default function Home() {
       axios
         .request(options)
         .then(function (response) {
-          setTituloProduto(response.data.data[0].nome);
-          setIdProduto(response.data.data[0].id);
-          console.log(response.data.data[0].nome);
+          setTituloProduto(response.data[0].nome);
+          setIdProduto(response.data[0].id);
+          console.log(response.data[0].nome);
         })
         .catch(function (error) {
           console.error(error);
