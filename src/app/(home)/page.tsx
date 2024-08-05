@@ -379,7 +379,7 @@ export default function Home() {
         .then(function (response) {
           setTituloProduto(response.data[0].nome);
           setIdProduto(response.data[0].id);
-          console.log(response.data[0].nome);
+          console.log(response.data[0]);
         })
         .catch(function (error) {
           console.error(error);
