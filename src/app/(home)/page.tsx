@@ -368,7 +368,7 @@ export default function Home() {
         {/* Fim da Seção das Imagens Dinâmicas */}
 
         {/* Escolha do Tipo de Produto */}
-        <div className="absolute right-0 flex flex-col justify-center align-center divide-y z-10">
+        <div className="hidden absolute right-0 flex flex-col justify-center align-center divide-y z-10">
           <button
             onClick={() => setTipoDeProduto("camisa")}
             type="button"
