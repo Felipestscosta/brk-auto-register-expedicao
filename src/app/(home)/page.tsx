@@ -132,7 +132,7 @@ export default function Home() {
     const primeiraLinhaDaPlanilha = [
       {
         codigo: data.codigo.toLocaleUpperCase(),
-        descricao: data.titulo.replace("+", " - "),
+        descricao: data.titulo.replace("+", " -"),
         estoque: estoque,
         preco: preco,
         produto_variacao: "Produto",
@@ -410,8 +410,8 @@ export default function Home() {
         </div>
 
         {/* Formulários */}
-        <div className="flex z-10">
-          <form className="flex flex-col justify-center items-center gap-10" onSubmit={handleSubmit(onSubmit)}>
+        <div className="flex z-10 w-full justify-center">
+          <form className="flex flex-col justify-center items-center gap-10 w-[850px]" onSubmit={handleSubmit(onSubmit)}>
             {/* Seção de Camisa */}
             {tipoDeProduto === "camisa" && (
               <>
