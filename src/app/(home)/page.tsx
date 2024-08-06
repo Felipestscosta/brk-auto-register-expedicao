@@ -132,7 +132,7 @@ export default function Home() {
     const primeiraLinhaDaPlanilha = [
       {
         codigo: data.codigo.toLocaleUpperCase(),
-        descricao: data.titulo,
+        descricao: data.titulo.replace("+", " - "),
         estoque: estoque,
         preco: preco,
         produto_variacao: "Produto",
