@@ -449,7 +449,7 @@ export default function Home() {
                       type="text"
                       placeholder="Ex: C0..."
                       {...register("codigo")}
-                      onKeyUp={(e: any) => pegaProdutoPorCodigo(e.target.value)}
+                      onBlur={(e: any) => pegaProdutoPorCodigo(e.target.value)}
                     />
                     {errors.codigo?.message ? <span className="text-red-300">{errors.codigo?.message}</span> : null}
                   </label>
