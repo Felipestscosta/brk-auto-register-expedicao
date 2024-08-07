@@ -747,47 +747,26 @@ export default function Home() {
               </>
             )}
 
-            {tipoDeProduto !== "" && (
-              <div className="flex container items-center justify-center mt-10 pt-10 py-2 px-10 border-t border-zinc-800 gap-8">
-                <button
-                  onClick={() => {
-                    setTipoCadastro("planilha");
-                  }}
-                  type="submit"
-                  className={`py-2 px-10 border border-transparent hover:border-zinc-400 rounded-lg text-zinc-200 ${carregando && "pointer-events-none cursor-not-allowed opacity-5"}`}
-                >
-                  {carregando ? (
-                    <span className="flex justify-center items-center">
-                      <CircleNotch size={20} className="animate-spin mr-4" />
-                      Processando...
-                    </span>
-                  ) : (
-                    <span className="flex justify-center items-center gap-2">
-                      <MicrosoftExcelLogo size={32} /> Gerar Planilha
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setTipoCadastro("bling");
-                  }}
-                  type="submit"
-                  className={`hidden py-2 px-10 border border-transparent hover:border-zinc-400 rounded-lg text-zinc-200 ${carregando && "pointer-events-none cursor-not-allowed opacity-5"}`}
-                >
-                  {carregando ? (
-                    <span className="flex justify-center items-center">
-                      <CircleNotch size={20} className="animate-spin mr-4" />
-                      Processando...
-                    </span>
-                  ) : (
-                    <span className="flex justify-center items-center gap-2">
-                      <ListPlus size={32} /> Cadastrar
-                    </span>
-                  )}
-                </button>
-              </div>
-            )}
+            <div className="flex container items-center justify-center mt-10 pt-10 py-2 px-10 border-t border-zinc-800 gap-8">
+              <button
+                onClick={() => {
+                  setTipoCadastro("planilha");
+                }}
+                type="submit"
+                className={`py-2 px-10 border border-transparent hover:border-zinc-400 rounded-lg text-zinc-200 ${carregando && "pointer-events-none cursor-not-allowed opacity-5"}`}
+              >
+                {carregando ? (
+                  <span className="flex justify-center items-center">
+                    <CircleNotch size={20} className="animate-spin mr-4" />
+                    Processando...
+                  </span>
+                ) : (
+                  <span className="flex justify-center items-center gap-2">
+                    <MicrosoftExcelLogo size={32} /> Gerar Planilha
+                  </span>
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>
