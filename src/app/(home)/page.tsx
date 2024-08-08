@@ -229,8 +229,8 @@ export default function Home() {
       Localização: "",
       "Estoque máximo": parseFloat("0"),
       "Estoque mínimo": parseFloat("0"),
-      "Peso líquido (Kg)": parseFloat("0,250"),
-      "Peso bruto (Kg)": parseFloat("0,250"),
+      "Peso líquido (Kg)": "0.250",
+      "Peso bruto (Kg)": "0.250",
       "GTIN/EAN": row.ean, // Dinâmico
       "GTIN/EAN da Embalagem": row.ean, // Dinâmico
       "Largura do produto": parseFloat("10"),
